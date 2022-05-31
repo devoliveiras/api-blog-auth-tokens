@@ -3,6 +3,14 @@ const middlewaresAutenticacao = require('./middlewares-autenticacao');
 //const passport = require('passport')
 
 module.exports = app => {
+
+  app
+  .route('/usuario/atualiza-token')
+  .post(
+    middlewaresAutenticacao.refresh,
+    usuariosControlador.login
+    );
+
   app
     .route('/usuario/login')
     .post(
