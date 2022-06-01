@@ -32,5 +32,12 @@ module.exports = {
         cria(id){
             return criaTokenOpaco(id, this.expiracao);
         }
+    },
+    verificacaoEmail: {
+        nome: 'token de verificação de email',
+        expiracao: [1, 'h'],
+        cria(id) {
+            return criaTokenJWT(id, this.expiracao);
+        }
     }
 }

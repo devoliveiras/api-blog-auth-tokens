@@ -3,9 +3,9 @@ const { InvalidArgumentError, InternalServerError } = require('../erros');
 const tokens = require('./tokens');
 const { EmailVerificacao, EmailVerificacao } = require('./emails');
 
-function geraEndereco(rota, id){
+function geraEndereco(rota, token){
   const baseURL = 'localhost:3000';
-  return `${baseURL}${rota}${id}`;
+  return `${baseURL}${rota}${token}`;
 }
 
 module.exports = {
@@ -15,16 +15,19 @@ module.exports = {
     try {
       const usuario = new Usuario({
         nome,
-        email
+        email,
+        emailVerificado: false
       });
 
       await usuario.adicionaSenha(senha);
 
       await usuario.adiciona();
 
+      const token = tokens.verificacaoEmail.cria(usuario.id);
+
       //Envio de email de verificação
-      const endereco = geraEndereco('/usuario/verifica-email/', usuario.id);
-      const emailVerificacao = new EmailVerificacao(usuairo, endereco);
+      const endereco = geraEndereco('/usuario/verifica-email/', token);
+      const emailVerificacao = new EmailVerificacao(usuario, endereco);
       emailVerificacao.enviaEmail().catch(console.log)
       
       res.status(201).json();
@@ -49,6 +52,16 @@ module.exports = {
   lista: async (req, res) => {
     const usuarios = await Usuario.lista();
     res.json(usuarios);
+  },
+
+  async verificaEmail(req, res){
+    try {
+      const usuario = req.user;
+      await usuario.verificaEmail();
+      res.status(200).json();
+    } catch (erro) {
+      res.status(500).json({ erro: erro.message });
+    }
   },
 
   deleta: async (req, res) => {
