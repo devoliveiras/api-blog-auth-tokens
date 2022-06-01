@@ -1,2 +1,2 @@
 # Blog do código
-> Um blog simples em Node.js
+> Estudo com api base de um blog simples aplicando sistema de autenticação com tokens JWT e validação de cadastro com envio de e-mail
