@@ -1,76 +1,88 @@
-const Usuario = require('./usuarios-modelo');
-const { InvalidArgumentError, InternalServerError } = require('../erros');
-const tokens = require('./tokens');
-const { EmailVerificacao, EmailVerificacao } = require('./emails');
+const Usuario = require('./usuarios-modelo')
+const { InvalidArgumentError } = require('../erros')
 
-function geraEndereco(rota, token){
-  const baseURL = 'localhost:3000';
-  return `${baseURL}${rota}${token}`;
+const tokens = require('./tokens')
+const { EmailVerificacao } = require('./emails')
+
+function geraEndereco (rota, token) {
+  const baseURL = process.env.BASE_URL
+  return `${baseURL}${rota}${token}`
 }
 
 module.exports = {
-  adiciona: async (req, res) => {
-    const { nome, email, senha } = req.body;
+  async adiciona (req, res) {
+    const { nome, email, senha } = req.body
 
     try {
       const usuario = new Usuario({
         nome,
         email,
         emailVerificado: false
-      });
+      })
+      await usuario.adicionaSenha(senha)
+      await usuario.adiciona()
 
-      await usuario.adicionaSenha(senha);
-
-      await usuario.adiciona();
-
-      const token = tokens.verificacaoEmail.cria(usuario.id);
-
-      //Envio de email de verificação
-      const endereco = geraEndereco('/usuario/verifica-email/', token);
-      const emailVerificacao = new EmailVerificacao(usuario, endereco);
+      const token = tokens.verificacaoEmail.cria(usuario.id)
+      const endereco = geraEndereco('/usuario/verifica_email/', token)
+      const emailVerificacao = new EmailVerificacao(usuario, endereco)
       emailVerificacao.enviaEmail().catch(console.log)
-      
-      res.status(201).json();
+
+      res.status(201).json()
     } catch (erro) {
       if (erro instanceof InvalidArgumentError) {
-        res.status(422).json({ erro: erro.message });
-      } else if (erro instanceof InternalServerError) {
-        res.status(500).json({ erro: erro.message });
-      } else {
-        res.status(500).json({ erro: erro.message });
+        return res.status(400).json({ erro: erro.message })
       }
+      res.status(500).json({ erro: erro.message })
     }
   },
 
-  login: async (req, res) => {
-    const acesstoken = tokens.access.cria(req.user.id);
-    const refreshToken = await tokens.refresh.cria(req.user.id);
-    res.set('Authorization', acesstoken);
-    res.status(200).send({ refreshToken });
-  },
-
-  lista: async (req, res) => {
-    const usuarios = await Usuario.lista();
-    res.json(usuarios);
-  },
-
-  async verificaEmail(req, res){
+  async login (req, res) {
     try {
-      const usuario = req.user;
-      await usuario.verificaEmail();
-      res.status(200).json();
+      const accessToken = tokens.access.cria(req.user.id)
+      const refreshToken = await tokens.refresh.cria(req.user.id)
+      res.set('Authorization', accessToken)
+      res.status(200).json({ refreshToken })
     } catch (erro) {
-      res.status(500).json({ erro: erro.message });
+      res.status(500).json({ erro: erro.message })
     }
   },
 
-  deleta: async (req, res) => {
-    const usuario = await Usuario.buscaPorId(req.params.id);
+  async logout (req, res) {
     try {
-      await usuario.deleta();
-      res.status(200).send();
+      const token = req.token
+      await tokens.access.invalida(token)
+      res.status(204).json()
     } catch (erro) {
-      res.status(500).json({ erro: erro });
+      res.status(500).json({ erro: erro.message })
+    }
+  },
+
+  async lista (req, res) {
+    try {
+      const usuarios = await Usuario.lista()
+      res.json(usuarios)
+    } catch (erro) {
+      res.status(500).json({ erro: erro.message })
+    }
+  },
+
+  async verificaEmail (req, res) {
+    try {
+      const usuario = req.user
+      await usuario.verificaEmail()
+      res.status(200).json()
+    } catch (erro) {
+      res.status(500).json({ erro: erro.message })
+    }
+  },
+
+  async deleta (req, res) {
+    try {
+      const usuario = await Usuario.buscaPorId(req.params.id)
+      await usuario.deleta()
+      res.status(200).json()
+    } catch (erro) {
+      res.status(500).json({ erro: erro })
     }
   }
-};
+}

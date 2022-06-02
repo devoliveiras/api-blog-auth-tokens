@@ -1,6 +1,3 @@
-const req = require('express/lib/request');
-const middlewaresAutenticacao = require('./middlewares-autenticacao');
-
 module.exports = {
   rotas: require('./usuarios-rotas'),
   controlador: require('./usuarios-controlador'),

@@ -1,28 +1,47 @@
-const postsDao = require('./posts-dao');
-const validacoes = require('../validacoes-comuns');
+const postsDao = require('./posts-dao')
+const validacoes = require('../validacoes-comuns')
 
 class Post {
-  constructor(post) {
-    this.titulo = post.titulo;
-    this.conteudo = post.conteudo;
-    this.valida();
+  constructor (post) {
+    this.id = post.id
+    this.titulo = post.titulo
+    this.conteudo = post.conteudo
+    this.autor = post.autor
+    this.valida()
   }
 
-  adiciona() {
-    return postsDao.adiciona(this);
+  adiciona () {
+    return postsDao.adiciona(this)
   }
 
-  valida() {
-    validacoes.campoStringNaoNulo(this.titulo, 'título');
-    validacoes.campoTamanhoMinimo(this.titulo, 'título', 5);
+  static async buscaPorId (id, idAutor) {
+    const post = await postsDao.buscaPorId(id, idAutor)
+    if (!post) {
+      return null
+    }
 
-    validacoes.campoStringNaoNulo(this.conteudo, 'conteúdo');
-    validacoes.campoTamanhoMaximo(this.conteudo, 'conteúdo', 140);
+    return new Post(post)
   }
 
-  static lista() {
-    return postsDao.lista();
+  valida () {
+    validacoes.campoStringNaoNulo(this.titulo, 'titulo')
+    validacoes.campoTamanhoMinimo(this.titulo, 'titulo', 5)
+
+    validacoes.campoStringNaoNulo(this.conteudo, 'conteudo')
+    validacoes.campoTamanhoMaximo(this.conteudo, 'conteudo', 140)
+  }
+
+  remover () {
+    return postsDao.remover(this)
+  }
+
+  static listarPorAutor (idAutor) {
+    return postsDao.listarPorAutor(idAutor)
+  }
+
+  static listarTodos () {
+    return postsDao.listarTodos()
   }
 }
 
-module.exports = Post;
+module.exports = Post
