@@ -21,7 +21,7 @@ module.exports = {
 
   async listarPorAutor (idAutor) {
     try {
-      return await dbAll('SELECT id, titulo FROM posts WHERE autor = ?', [idAutor])
+      return await dbAll('SELECT id, titulo, conteudo, autor FROM posts WHERE autor = ?', [idAutor])
     } catch (erro) {
       throw new InternalServerError('Erro ao listar os posts!')
     }
